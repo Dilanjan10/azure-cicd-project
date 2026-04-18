@@ -1,0 +1,45 @@
+# =============================================
+# CI/CD Pipeline for Azure DevOps
+# =============================================
+# This pipeline runs every time you push to main.
+# It does 3 things: Install → Test → Deploy
+
+# TRIGGER: Run this pipeline when code is pushed to "main"
+trigger:
+  - main
+
+# AGENT: Use a free Ubuntu Linux machine from Microsoft
+pool:
+  vmImage: 'ubuntu-latest'
+
+# STEPS: The actions to perform, in order
+steps:
+
+  # --- STEP 1: Install Node.js ---
+  # The build machine is blank, so we install Node.js first
+  - task: NodeTool@0
+    displayName: 'Step 1 - Install Node.js'
+    inputs:
+      versionSpec: '20.x'
+
+  # --- STEP 2: Install project dependencies ---
+  # This runs "npm install" to download express, jest, etc.
+  - script: npm install
+    displayName: 'Step 2 - Install dependencies'
+
+  # --- STEP 3: Run tests ---
+  # This runs your 3 automated tests
+  # If any test FAILS, the pipeline STOPS and does NOT deploy
+  - script: npm test
+    displayName: 'Step 3 - Run tests'
+
+  # --- STEP 4: Deploy to Azure ---
+  # If all tests passed, deploy the app to your Azure Web App
+  - task: AzureWebApp@1
+    displayName: 'Step 4 - Deploy to Azure Web App'
+    inputs:
+      azureSubscription: 'azure-connection'
+      appType: 'webAppLinux'
+      appName: 'cicd-dilanjan'
+      runtimeStack: 'NODE|20-lts'
+      startUpCommand: 'npm start'
